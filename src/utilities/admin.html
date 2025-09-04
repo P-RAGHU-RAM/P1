@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Upload</title>
+    <style>
+        /* Basic styling for a cleaner look */
+        body {
+            font-family: sans-serif;
+            display: grid;
+            place-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            padding: 2rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        input,
+        button {
+            font-size: 1rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Upload Master XML File</h2>
+        <form id="uploadForm">
+            <input type="file" id="xmlFile" name="masterfile" accept=".xml" required>
+            <br>
+            <button type="submit">Upload</button>
+        </form>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const statusMessage = document.getElementById('status');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Stop the form from reloading the page
+
+            const fileInput = document.getElementById('xmlFile');
+            const formData = new FormData();
+            formData.append('masterfile', fileInput.files[0]);
+
+            statusMessage.textContent = 'Uploading...';
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const resultText = await response.text();
+                statusMessage.textContent = resultText;
+            } catch (error) {
+                console.error('Error:', error);
+                statusMessage.textContent = 'Upload failed. See console for details.';
+            }
+        });
+    </script>
+</body>
+
+</html>
