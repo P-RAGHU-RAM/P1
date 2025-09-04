@@ -2,10 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const xml2js = require('xml2js');
 const fs = require('fs'); // File system module
+const cors = require('cors');
 
 const app = express();
 const port = 3000;
-
+app.use(cors());
+let uploadedItems = [];
 // Use multer to handle file uploads. This stores the file temporarily in a folder named 'uploads'.
 const upload = multer({ dest: 'uploads/' });
 
@@ -28,14 +30,17 @@ app.post('/api/upload', upload.single('masterfile'), (req, res) => {
 
       // For now, just log the parsed data to the console to see it works!
       console.dir(result, { depth: null });
-
+      uploadedItems = result.store.item;
+      console.log('Items saved:', uploadedItems);
       // Later, you'll save this 'result' to your database here.
 
       res.status(200).send('File uploaded and processed successfully! 🚀');
     });
   });
 });
-
+app.get('/api/items', (req, res) => {
+  res.json(uploadedItems); // Send the stored items as JSON
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

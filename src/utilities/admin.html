@@ -48,6 +48,10 @@
             event.preventDefault(); // Stop the form from reloading the page
 
             const fileInput = document.getElementById('xmlFile');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                statusMessage.textContent = 'Please select a file before uploading.';
+                return;
+            }
             const formData = new FormData();
             formData.append('masterfile', fileInput.files[0]);
 
