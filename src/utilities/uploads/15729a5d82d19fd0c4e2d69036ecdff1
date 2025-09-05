@@ -1,0 +1,17 @@
+<store>
+  <item category="Electronics">
+    <name>Laptop</name>
+    <id>SKU1001</id>
+    <price>1200.00</price>
+  </item>
+  <item category="Office">
+    <name>Desk Chair</name>
+    <id>SKU2034</id>
+    <price>350.50</price>
+  </item>
+  <item category="Accessories">
+    <name>Wireless Mouse</name>
+    <id>SKU1055</id>
+    <price>25.00</price>
+  </item>
+</store>

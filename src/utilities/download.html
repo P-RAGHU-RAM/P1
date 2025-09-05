@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Download Selections</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: grid;
+            place-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        input {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            font-size: 1rem;
+            padding: 0.6rem 1rem;
+            margin-top: 1rem;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        p#status {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Download User Selections</h2>
+        <p>Enter the User ID to download their selections.</p>
+        <input type="text" id="userIdInput" placeholder="e.g., user123">
+        <br>
+        <button id="downloadBtn">Download XML</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            const statusMessage = document.getElementById('status');
+            const token = localStorage.getItem('authToken');
+
+            if (!token) {
+                alert('You must be logged in to download files.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const userId = document.getElementById('userIdInput').value;
+            if (!userId) {
+                alert('Please enter a User ID.');
+                return;
+            }
+
+            statusMessage.textContent = 'Preparing download...';
+            statusMessage.style.color = 'black';
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/download-selections/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `selections_${userId}.xml`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    statusMessage.textContent = 'Download started successfully!';
+                    statusMessage.style.color = 'green';
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+            } catch (error) {
+                statusMessage.textContent = `Failed to download: ${error.message}`;
+                statusMessage.style.color = 'red';
+                console.error('Download error:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Item Selection</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Select Your Items</h2>
+    <form id="selectionForm">
+        <table id="itemsTable">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <br>
+        <button type="submit">Submit Selections</button>
+    </form>
+
+    <script>
+        async function loadItems() {
+            try {
+                const response = await fetch('http://localhost:3000/api/items');
+                if (!response.ok) return;
+                const items = await response.json();
+                const tableBody = document.querySelector("#itemsTable tbody");
+                tableBody.innerHTML = '';
+
+                items.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td><input type="checkbox" name="selectedItem" value="${item.id[0]}"></td>
+                            <td>${item.name[0]}</td>
+                            <td>${item.id[0]}</td>
+                            <td>${item.price[0]}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Failed to load items:', error);
+                document.body.innerHTML += '<p>Could not load items. Is the server running and is the master XML uploaded?</p>';
+            }
+        }
+
+        document.getElementById('selectionForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('You must be logged in to submit selections.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const selectedIds = [];
+            document.querySelectorAll('input[name="selectedItem"]:checked').forEach(checkbox => {
+                selectedIds.push(checkbox.value);
+            });
+
+            if (selectedIds.length === 0) {
+                alert('Please select at least one item.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/submit-selections', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ selectedIds }),
+                });
+
+                if (response.ok) {
+                    alert('Your selections have been successfully submitted!');
+                } else {
+                    alert('Submission failed. Your session may have expired. Please log in again.');
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Error submitting selections:', error);
+                alert('An error occurred while submitting. See console for details.');
+            }
+        });
+
+        loadItems();
+    </script>
+</body>
+
+</html>

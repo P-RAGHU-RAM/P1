@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 1rem;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .table-wrapper {
+            flex: 1;
+            min-width: 400px;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Admin Selections Dashboard</h1>
+    <div class="container">
+        <div class="table-wrapper">
+            <h2>View by User</h2>
+            <table id="userTable">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Selected Items</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="table-wrapper">
+            <h2>View by Item</h2>
+            <table id="itemTable">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Selected by Users</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert('You must be logged in to view this page.');
+            window.location.href = 'login.html';
+        }
+
+        async function loadDashboard() {
+            try {
+                const [userResponse, itemResponse] = await Promise.all([
+                    fetch('http://localhost:3000/api/view-by-user', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('http://localhost:3000/api/view-by-item', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (!userResponse.ok || !itemResponse.ok) {
+                    throw new Error('Failed to fetch data. Your session may have expired.');
+                }
+
+                const userData = await userResponse.json();
+                const itemData = await itemResponse.json();
+
+                populateUserTable(userData);
+                populateItemTable(itemData);
+
+            } catch (error) {
+                console.error('Dashboard Error:', error);
+                alert(error.message);
+                window.location.href = 'login.html';
+            }
+        }
+
+        function populateUserTable(data) {
+            const userTableBody = document.querySelector("#userTable tbody");
+            userTableBody.innerHTML = '';
+            for (const userId in data) {
+                const itemsHtml = data[userId].map(item => `<li>${item.name[0]} (ID: ${item.id[0]})</li>`).join('');
+                const row = `<tr><td>${userId}</td><td><ul>${itemsHtml}</ul></td></tr>`;
+                userTableBody.innerHTML += row;
+            }
+        }
+
+        function populateItemTable(data) {
+            const itemTableBody = document.querySelector("#itemTable tbody");
+            itemTableBody.innerHTML = '';
+            for (const itemName in data) {
+                const usersHtml = data[itemName].join(', ');
+                const row = `<tr><td>${itemName}</td><td>${usersHtml}</td></tr>`;
+                itemTableBody.innerHTML += row;
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>
